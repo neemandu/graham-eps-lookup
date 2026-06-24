@@ -184,7 +184,7 @@
     "filing": {
       "form": "10-K",
       "date": "2022-12-31",
-      "url": "https://www.sec.gov/Archives/edgar/data/1646188/000121390024028244/0001213900-24-028244-index.htm"
+      "url": "https://www.sec.gov/Archives/edgar/data/1646188/000121390023019939/0001213900-23-019939-index.htm"
     },
     "source": "SEC EDGAR XBRL + Yahoo"
   },
@@ -268,7 +268,7 @@
     "filing": {
       "form": "10-K",
       "date": "2023-12-31",
-      "url": "https://www.sec.gov/Archives/edgar/data/1646188/000121390025022968/0001213900-25-022968-index.htm"
+      "url": "https://www.sec.gov/Archives/edgar/data/1646188/000121390024028244/0001213900-24-028244-index.htm"
     },
     "source": "SEC EDGAR XBRL + Yahoo"
   },
@@ -352,7 +352,7 @@
     "filing": {
       "form": "10-K",
       "date": "2024-12-31",
-      "url": "https://www.sec.gov/Archives/edgar/data/1646188/000121390026035981/0001213900-26-035981-index.htm"
+      "url": "https://www.sec.gov/Archives/edgar/data/1646188/000121390025022968/0001213900-25-022968-index.htm"
     },
     "source": "SEC EDGAR XBRL + Yahoo"
   },
@@ -416,6 +416,27 @@
       "form": "10-Q",
       "date": "2025-09-30",
       "url": "https://www.sec.gov/Archives/edgar/data/1646188/000121390025109604/0001213900-25-109604-index.htm"
+    },
+    "source": "SEC EDGAR XBRL + Yahoo"
+  },
+  {
+    "quarter": "2025-Q4",
+    "quarterEnd": "2025-12-31",
+    "method": "Graham Number",
+    "historical": true,
+    "eps": -0.67,
+    "bvps": 1.1498,
+    "intrinsicValue": null,
+    "price": 11.02,
+    "marginOfSafety": null,
+    "growth": null,
+    "bondYield": null,
+    "criteriaPassed": null,
+    "criteriaTotal": null,
+    "filing": {
+      "form": "10-K",
+      "date": "2025-12-31",
+      "url": "https://www.sec.gov/Archives/edgar/data/1646188/000121390026035981/0001213900-26-035981-index.htm"
     },
     "source": "SEC EDGAR XBRL + Yahoo"
   },
