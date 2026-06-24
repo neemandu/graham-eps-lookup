@@ -66,3 +66,87 @@ export function marginOfSafety(intrinsicValue, price) {
   }
   return (intrinsicValue - price) / price; // e.g. 0.25 => 25% below intrinsic value
 }
+
+// Graham's "defensive investor" qualitative checklist (from The Intelligent
+// Investor, adapted to the data Yahoo exposes). Each item is pass / fail /
+// unknown(null). `value` is the raw number for display; `pass` is the verdict.
+export function defensiveCriteria(s) {
+  const list = [];
+  const add = (key, label, threshold, value, pass) =>
+    list.push({ key, label, threshold, value, pass });
+
+  const has = (v) => v !== null && v !== undefined && Number.isFinite(v);
+
+  // Adequate size — Graham wanted large, established firms. Modern proxy: >$2B.
+  add(
+    'size',
+    'Adequate size (market cap)',
+    '≥ $2B',
+    s.marketCap,
+    has(s.marketCap) ? s.marketCap >= 2e9 : null
+  );
+
+  // Strong financial condition — current ratio at least 2.
+  add(
+    'currentRatio',
+    'Current ratio',
+    '≥ 2',
+    s.currentRatio,
+    has(s.currentRatio) ? s.currentRatio >= 2 : null
+  );
+
+  // Conservative leverage — debt/equity (Yahoo gives this as a percent).
+  add(
+    'debt',
+    'Debt / equity',
+    '≤ 100%',
+    s.debtToEquity,
+    has(s.debtToEquity) ? s.debtToEquity <= 100 : null
+  );
+
+  // Earnings stability — positive trailing earnings.
+  add(
+    'earnings',
+    'Positive earnings (EPS TTM)',
+    '> 0',
+    s.epsTTM,
+    has(s.epsTTM) ? s.epsTTM > 0 : null
+  );
+
+  // Dividend record — Graham wanted uninterrupted dividends.
+  add(
+    'dividend',
+    'Pays a dividend',
+    'yes',
+    s.dividendRate,
+    has(s.dividendRate) ? s.dividendRate > 0 : false
+  );
+
+  // Moderate P/E.
+  add(
+    'pe',
+    'P/E ratio',
+    '≤ 15',
+    s.trailingPE,
+    has(s.trailingPE) ? s.trailingPE <= 15 : null
+  );
+
+  // Moderate price-to-book.
+  add(
+    'pb',
+    'Price / book',
+    '≤ 1.5',
+    s.priceToBook,
+    has(s.priceToBook) ? s.priceToBook <= 1.5 : null
+  );
+
+  // Combined "Graham number" guard: P/E x P/B should not exceed 22.5.
+  const pepb =
+    has(s.trailingPE) && has(s.priceToBook) ? s.trailingPE * s.priceToBook : null;
+  add('pepb', 'P/E × P/B', '≤ 22.5', pepb, has(pepb) ? pepb <= 22.5 : null);
+
+  const scored = list.filter((c) => c.pass !== null);
+  const passed = scored.filter((c) => c.pass === true).length;
+
+  return { list, passed, total: scored.length };
+}

@@ -4,10 +4,11 @@ Guidance for Claude Code (and humans) working in this repository.
 
 ## What this is
 
-A small web app: enter a stock ticker, see its **EPS (TTM)** pulled live from
-Yahoo Finance. This is the first step toward a fuller **Benjamin Graham
-intrinsic value** calculator (the formula math already lives in `graham.js`,
-unused for now).
+A web app: enter a stock ticker and get a **Benjamin Graham analysis** —
+intrinsic value `V = EPS × (8.5 + 2g) × 4.4 / Y`, margin of safety vs. the
+current price, and a defensive-investor checklist. EPS, growth (`g`), and the
+checklist metrics come from Yahoo Finance; the AAA bond yield (`Y`) comes from
+FRED (with fallbacks). `g` and `Y` are auto-derived but user-overridable.
 
 ## Architecture
 
@@ -25,16 +26,31 @@ index.html / app.js / style.css  ->  public/   (static front-end)
 
 - **`public/`** — static front-end (vanilla HTML/CSS/JS, no framework). Vercel
   serves this at the site root.
-- **`api/eps.js`** — the production endpoint on Vercel (serverless function).
-- **`server.js`** — an Express server exposing the same `/api/eps` route for
-  local development (`npm run dev` / `npm start`). Not used in production.
-- **`yahoo.js`** — the single source of truth for talking to Yahoo. Both the
-  serverless function and the local server import `getStockData()` from here.
-- **`graham.js`** — Benjamin Graham value math. Currently unused; kept for the
-  next milestone.
+- **`api/analyze.js`** — main production endpoint (`/api/analyze`). `api/eps.js`
+  is the original simple EPS-only endpoint, still present.
+- **`server.js`** — Express server exposing the same routes for local
+  development (`npm run dev` / `npm start`). Not used in production.
+- **`analyze.js`** — shared orchestration: fetch Yahoo + FRED, resolve `g`/`Y`,
+  run the value + checklist. Imported by both `api/analyze.js` and `server.js`.
+- **`yahoo.js`** — all Yahoo access: `getStockData` (simple), `getFullStockData`
+  (rich, incl. the analyst growth estimate), `getQuoteRaw` (e.g. `^TNX`).
+- **`fred.js`** — AAA bond yield (`Y`) with a fallback chain (see below).
+- **`graham.js`** — the value formula, margin of safety, and `defensiveCriteria`
+  (the checklist thresholds).
 
-Keep `api/eps.js` and the `server.js` route thin — put any shared logic in
-`yahoo.js` so both stay in sync.
+Keep the endpoints thin — shared logic lives in `analyze.js` / `yahoo.js` /
+`graham.js` so the Vercel function and local server never drift.
+
+## Resolving g and Y
+
+- **g (growth):** `getFullStockData` reads Yahoo's `earningsTrend`. Yahoo dropped
+  the long-term `+5y` figure, so we prefer `+1y`, then `0y`, then `+1q`. The
+  formula is very sensitive to `g`, so the UI always lets the user override it.
+- **Y (AAA bond yield):** `fred.js` tries, in order: (1) FRED `DAAA` Moody's Aaa
+  CSV, (2) Yahoo `^TNX` 10-yr Treasury + ~1.0%, (3) a static default. Note FRED
+  is reachable from local Node but **times out from Vercel's AWS network**, so in
+  production the Treasury proxy is normally what's used — the response labels the
+  source so this is visible.
 
 ## How Yahoo is accessed (important)
 

@@ -7,6 +7,7 @@ import express from 'express';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getStockData } from './yahoo.js';
+import { analyzeTicker, TICKER_RE } from './analyze.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -46,6 +47,22 @@ app.get('/api/eps', async (req, res) => {
     });
   } catch (err) {
     res.status(502).json({ error: err.message || 'Failed to fetch stock data.' });
+  }
+});
+
+app.get('/api/analyze', async (req, res) => {
+  const ticker = String(req.query.ticker || '').trim();
+  if (!ticker || !TICKER_RE.test(ticker)) {
+    return res.status(400).json({ error: 'Please provide a valid ticker symbol.' });
+  }
+  try {
+    const data = await analyzeTicker(ticker, {
+      growth: req.query.growth,
+      bondYield: req.query.bondYield,
+    });
+    res.json(data);
+  } catch (err) {
+    res.status(502).json({ error: err.message || 'Failed to analyze stock.' });
   }
 });
 

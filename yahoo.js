@@ -126,7 +126,70 @@ async function fetchQuote(symbol, attempt = 0) {
 }
 
 /**
- * Public helper: returns the normalized fields we care about for the app.
+ * Fetch one or more quoteSummary modules (deeper data: key stats, financials,
+ * analyst earnings trend, etc.). Same session/retry handling as fetchQuote.
+ */
+async function fetchSummary(symbol, modules, attempt = 0) {
+  const { cookie, crumb } = await getSession(attempt > 0);
+
+  await sleep(jitter(100, 400));
+
+  const url =
+    `https://query2.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(symbol)}` +
+    `?modules=${modules.join(',')}&crumb=${encodeURIComponent(crumb)}`;
+
+  const res = await fetch(url, {
+    headers: {
+      ...BROWSER_HEADERS,
+      Accept: 'application/json',
+      Referer: `https://finance.yahoo.com/quote/${encodeURIComponent(symbol)}/`,
+      Origin: 'https://finance.yahoo.com',
+      ...(cookie ? { Cookie: cookie } : {}),
+    },
+  });
+
+  if ((res.status === 401 || res.status === 403) && attempt === 0) {
+    return fetchSummary(symbol, modules, 1);
+  }
+  if (!res.ok) {
+    throw new Error(`Yahoo returned HTTP ${res.status} for ${symbol}.`);
+  }
+
+  const data = await res.json();
+  const result = data?.quoteSummary?.result;
+  if (!Array.isArray(result) || result.length === 0) {
+    throw new Error(`No summary data found for "${symbol}".`);
+  }
+  return result[0];
+}
+
+// Pull a usable annual growth estimate (as a percent) from the earningsTrend
+// module. Yahoo dropped the long-term "+5y" figure, so we prefer next-year,
+// then current-year, then next-quarter as fallbacks.
+function extractGrowth(earningsTrend) {
+  const trend = earningsTrend?.trend || [];
+  const byPeriod = {};
+  for (const t of trend) byPeriod[t.period] = t?.growth?.raw;
+
+  const order = [
+    ['+5y', '5-year analyst estimate'],
+    ['+1y', 'next-year analyst estimate'],
+    ['0y', 'current-year analyst estimate'],
+    ['+1q', 'next-quarter analyst estimate'],
+  ];
+  for (const [period, label] of order) {
+    const v = byPeriod[period];
+    if (typeof v === 'number' && Number.isFinite(v)) {
+      return { rate: Number((v * 100).toFixed(2)), source: `Yahoo ${label}` };
+    }
+  }
+  return { rate: null, source: null };
+}
+
+const num = (o) => (o && typeof o.raw === 'number' ? o.raw : null);
+
+/**
+ * Simple lookup (used by /api/eps): just the headline fields.
  */
 export async function getStockData(symbol) {
   const q = await fetchQuote(symbol.trim().toUpperCase());
@@ -139,5 +202,57 @@ export async function getStockData(symbol) {
     peTTM: q.trailingPE ?? null,
     marketState: q.marketState || null,
     exchange: q.fullExchangeName || q.exchange || null,
+  };
+}
+
+/**
+ * Raw quote result for a symbol (used e.g. for ^TNX treasury yield).
+ */
+export async function getQuoteRaw(symbol) {
+  return fetchQuote(symbol.trim().toUpperCase());
+}
+
+/**
+ * Rich data set for the Graham analysis: headline numbers + the inputs for the
+ * defensive-investor checklist + an auto growth estimate.
+ */
+export async function getFullStockData(symbol) {
+  const sym = symbol.trim().toUpperCase();
+  const q = await fetchQuote(sym);
+  const s = await fetchSummary(sym, [
+    'defaultKeyStatistics',
+    'financialData',
+    'summaryDetail',
+    'earningsTrend',
+  ]);
+
+  const ks = s.defaultKeyStatistics || {};
+  const fd = s.financialData || {};
+  const sd = s.summaryDetail || {};
+
+  return {
+    symbol: q.symbol,
+    name: q.longName || q.shortName || q.symbol,
+    currency: q.currency || 'USD',
+    exchange: q.fullExchangeName || q.exchange || null,
+    marketState: q.marketState || null,
+    price: q.regularMarketPrice ?? null,
+    marketCap: q.marketCap ?? null,
+
+    epsTTM: q.epsTrailingTwelveMonths ?? num(ks.trailingEps),
+    forwardEps: num(ks.forwardEps),
+    bookValue: num(ks.bookValue),
+    priceToBook: num(ks.priceToBook),
+    trailingPE: q.trailingPE ?? num(sd.trailingPE),
+
+    currentRatio: num(fd.currentRatio),
+    debtToEquity: num(fd.debtToEquity), // Yahoo expresses this as a percent
+    totalDebt: num(fd.totalDebt),
+    totalCash: num(fd.totalCash),
+
+    dividendRate: num(sd.dividendRate),
+    dividendYield: num(sd.dividendYield),
+
+    growthEstimate: extractGrowth(s.earningsTrend), // { rate, source }
   };
 }

@@ -140,6 +140,66 @@ button:disabled { opacity: 0.55; cursor: progress; }
   font-size: 0.88rem;
 }
 
+.result .card { margin-bottom: 18px; }
+.result h3 { margin: 0 0 14px; font-size: 1.05rem; }
+
+button.secondary {
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  align-self: flex-end;
+  margin-top: 0;
+}
+.field small { font-size: 0.72rem; }
+
+.checklist-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.checklist-head h3 { margin: 0; }
+.score {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  padding: 5px 11px;
+  border-radius: 999px;
+}
+
+.checklist { list-style: none; margin: 0; padding: 0; }
+.check {
+  display: grid;
+  grid-template-columns: 24px 1fr auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 4px;
+  border-bottom: 1px solid var(--border);
+}
+.check:last-child { border-bottom: 0; }
+.check-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.check.pass .check-icon { background: rgba(46, 204, 113, 0.18); color: var(--green); }
+.check.fail .check-icon { background: rgba(255, 92, 92, 0.18); color: var(--red); }
+.check.unknown .check-icon { background: var(--card-2); color: var(--muted); }
+.check-label { font-size: 0.92rem; }
+.check-value { font-weight: 600; font-variant-numeric: tabular-nums; }
+.check-threshold { font-size: 0.8rem; min-width: 56px; text-align: right; }
+
+@media (max-width: 520px) {
+  .check { grid-template-columns: 22px 1fr auto; }
+  .check-threshold { display: none; }
+}
+
 footer { margin-top: 28px; text-align: center; line-height: 1.5; }
 
 @media (max-width: 480px) {
