@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EPS Lookup — Yahoo Finance</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header>
+        <h1>EPS Lookup</h1>
+        <p class="subtitle">Enter a stock ticker to see its EPS (TTM) from Yahoo Finance.</p>
+      </header>
+
+      <form id="form" class="card">
+        <label class="field grow">
+          <span>Ticker symbol</span>
+          <input
+            id="ticker"
+            name="ticker"
+            type="text"
+            placeholder="e.g. ONDS"
+            autocomplete="off"
+            spellcheck="false"
+            required
+          />
+        </label>
+        <button id="submit" type="submit">Look up</button>
+      </form>
+
+      <section id="status" class="status" hidden></section>
+
+      <section id="result" class="card result" hidden>
+        <h2 id="r-name"></h2>
+        <span id="r-meta" class="muted"></span>
+        <div class="stat highlight" style="margin-top: 18px">
+          <span class="stat-label">EPS (TTM)</span>
+          <span class="stat-value" id="r-eps"></span>
+        </div>
+      </section>
+
+      <footer class="muted small">Data via Yahoo Finance.</footer>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
