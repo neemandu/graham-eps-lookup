@@ -1,0 +1,22 @@
+[
+  {
+    "quarter": "2026-Q1",
+    "quarterEnd": "2026-03-31",
+    "capturedAt": "2026-06-24T07:14:20.350Z",
+    "price": 8.53,
+    "eps": 0.09,
+    "growth": 64.29,
+    "growthSource": "Yahoo next-year analyst estimate",
+    "bondYield": 5.56,
+    "bondYieldSource": "FRED Moody's Aaa (2026-06-22)",
+    "intrinsicValue": 9.763251798561154,
+    "marginOfSafety": 0.144578170991929,
+    "criteriaPassed": 4,
+    "criteriaTotal": 8,
+    "filing": {
+      "form": "10-Q",
+      "date": "2026-05-15",
+      "url": "https://www.sec.gov/Archives/edgar/data/1646188/000121390026057859/ea0290102-10q_ondas.htm"
+    }
+  }
+]

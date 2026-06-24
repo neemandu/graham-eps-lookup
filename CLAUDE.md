@@ -68,6 +68,34 @@ client refreshes the session once and retries. These endpoints are unofficial
 and can change — if EPS stops resolving, re-check the cookie/crumb handshake
 first.
 
+## Tracking (watchlist + quarterly history)
+
+A second page (`public/track.html`) maintains a **watchlist** and records a
+**quarterly snapshot** of each stock's Graham metrics after the company reports.
+
+- **Storage** is JSON committed to this repo (`data/watchlist.json`,
+  `data/history/<TICKER>.json`) via `lib/store.js`, which has two modes:
+  - *local* (no `GITHUB_TOKEN`): plain file reads/writes. Used in dev and inside
+    the GitHub Action (which then commits the files).
+  - *github* (`GITHUB_TOKEN` set): reads/writes via the GitHub Contents API.
+    Used on Vercel so watchlist edits persist (each write is a commit).
+- **APIs:** `api/watchlist.js` (GET/POST/DELETE), `api/history.js` (GET, single
+  or overview), `api/snapshot.js` (manual trigger; optional `SNAPSHOT_KEY`).
+- **Scheduling:** `.github/workflows/snapshot.yml` runs `scripts/snapshot.js`
+  daily (11:00 UTC). The script (via `lib/snapshot.js#runSnapshots`) analyzes
+  each watchlist ticker and appends a snapshot **only when its
+  `mostRecentQuarter` (from Yahoo) advances past the last recorded quarter** —
+  i.e. after a new report. The Action commits the new `data/` files itself using
+  the built-in `GITHUB_TOKEN` (needs repo "Workflow permissions: read and
+  write").
+- **Filing links:** `sec.js#getFilings` resolves recent 10-Q/10-K links from SEC
+  EDGAR (ticker → CIK → submissions). US listings only; non-US returns none.
+
+### Production note
+On Vercel the app needs a `GITHUB_TOKEN` env var for watchlist *writes*. Without
+it, reads still work (bundled `data/`) and the scheduled Action still records
+snapshots (it uses its own token) — only add/remove-from-the-website fails.
+
 ## Commands
 
 ```bash

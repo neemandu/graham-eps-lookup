@@ -56,18 +56,39 @@ Treasury + ~1% → a static default. FRED is reachable locally but tends to time
 out from Vercel's network, so production usually shows the Treasury proxy — the
 UI labels whichever source was used.
 
+## Tracking dashboard
+
+A second page (`/track.html`) keeps a **watchlist** and records a **quarterly
+snapshot** of each stock's Graham metrics — value, margin of safety, checklist
+score — plus a link to that quarter's SEC filing (10-Q / 10-K).
+
+- Storage is **JSON committed to this repo** (`data/watchlist.json`,
+  `data/history/<TICKER>.json`).
+- A **GitHub Action** (`.github/workflows/snapshot.yml`, daily) captures a new
+  snapshot only when a company's most-recent reported quarter advances — i.e.
+  right after they publish. It commits the data itself.
+- Add/remove from the website needs a `GITHUB_TOKEN` env var on Vercel (writes
+  go through the GitHub API). Reads and the scheduled job work without it.
+
 ## Files
 
 | File              | Purpose |
 | ----------------- | ------- |
 | `api/analyze.js`  | Production endpoint `/api/analyze` (Vercel) |
 | `api/eps.js`      | Original simple EPS-only endpoint |
+| `api/watchlist.js`| Watchlist GET/POST/DELETE |
+| `api/history.js`  | Quarterly history (single ticker or overview) |
+| `api/snapshot.js` | Manual snapshot trigger |
 | `server.js`       | Express server (local dev) exposing the same routes |
 | `analyze.js`      | Shared orchestration (Yahoo + FRED + value + checklist) |
 | `yahoo.js`        | Yahoo session handshake + quote / summary fetch |
 | `fred.js`         | AAA bond yield with fallback chain |
+| `sec.js`          | SEC EDGAR 10-Q / 10-K filing links |
 | `graham.js`       | Value, margin of safety, defensive checklist |
-| `public/`         | Web UI (HTML / CSS / JS) |
+| `lib/store.js`    | JSON-in-repo persistence (local files / GitHub API) |
+| `lib/snapshot.js` | Build + record quarterly snapshots |
+| `scripts/snapshot.js` | Entry point for the scheduled Action |
+| `public/`         | Web UI — calculator (`index.html`) + tracker (`track.html`) |
 
 ## Notes
 

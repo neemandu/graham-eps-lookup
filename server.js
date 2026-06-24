@@ -8,11 +8,15 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getStockData } from './yahoo.js';
 import { analyzeTicker, TICKER_RE } from './analyze.js';
+import watchlistHandler from './api/watchlist.js';
+import historyHandler from './api/history.js';
+import snapshotHandler from './api/snapshot.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Simple per-IP rate limit so the app itself doesn't get hammered (and in turn
@@ -65,6 +69,11 @@ app.get('/api/analyze', async (req, res) => {
     res.status(502).json({ error: err.message || 'Failed to analyze stock.' });
   }
 });
+
+// Watchlist + history reuse the exact Vercel handlers so local == production.
+app.all('/api/watchlist', (req, res) => watchlistHandler(req, res));
+app.get('/api/history', (req, res) => historyHandler(req, res));
+app.all('/api/snapshot', (req, res) => snapshotHandler(req, res));
 
 app.listen(PORT, () => {
   console.log(`Graham Value app running at http://localhost:${PORT}`);

@@ -32,7 +32,15 @@ header h1 {
   font-size: 2.2rem;
   letter-spacing: -0.02em;
 }
-.subtitle { color: var(--muted); margin: 6px 0 28px; }
+.subtitle { color: var(--muted); margin: 6px 0 12px; }
+.topnav { margin: 0 0 24px; }
+.topnav a {
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.topnav a:hover { text-decoration: underline; }
 
 .card {
   background: var(--card);

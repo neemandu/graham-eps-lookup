@@ -224,11 +224,13 @@ export async function getFullStockData(symbol) {
     'financialData',
     'summaryDetail',
     'earningsTrend',
+    'calendarEvents',
   ]);
 
   const ks = s.defaultKeyStatistics || {};
   const fd = s.financialData || {};
   const sd = s.summaryDetail || {};
+  const fdate = (o) => (o && typeof o.fmt === 'string' ? o.fmt : null);
 
   return {
     symbol: q.symbol,
@@ -252,6 +254,11 @@ export async function getFullStockData(symbol) {
 
     dividendRate: num(sd.dividendRate),
     dividendYield: num(sd.dividendYield),
+
+    // Reporting calendar — used to detect when a new quarter is published.
+    mostRecentQuarter: fdate(ks.mostRecentQuarter), // e.g. "2026-03-31"
+    lastFiscalYearEnd: fdate(ks.lastFiscalYearEnd),
+    nextEarningsDate: fdate(s.calendarEvents?.earnings?.earningsDate?.[0]),
 
     growthEstimate: extractGrowth(s.earningsTrend), // { rate, source }
   };
