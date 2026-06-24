@@ -15,25 +15,28 @@ import { getFinvizGrowth } from './finviz.js';
 const DEFAULT_GROWTH = 15;
 
 export async function resolveGrowth(stock, ticker) {
+  const pe = stock.trailingPE;
+  const peg = stock.pegRatio;
+  const peStr = Number.isFinite(pe) ? pe.toFixed(1) : '—';
+  const pegStr = Number.isFinite(peg) ? peg.toFixed(2) : '—';
+
   // 1. P/E ÷ PEG (≈ 5-yr expected). Only when both are positive.
-  if (
-    Number.isFinite(stock.trailingPE) &&
-    stock.trailingPE > 0 &&
-    Number.isFinite(stock.pegRatio) &&
-    stock.pegRatio > 0
-  ) {
-    const g = Number((stock.trailingPE / stock.pegRatio).toFixed(2));
+  if (Number.isFinite(pe) && pe > 0 && Number.isFinite(peg) && peg > 0) {
+    const g = Number((pe / peg).toFixed(2));
     if (Number.isFinite(g) && g > 0) {
-      return { value: g, source: 'Yahoo P/E ÷ PEG (~5-yr expected)' };
+      return { value: g, source: `Yahoo P/E ÷ PEG = ${peStr} ÷ ${pegStr} (~5-yr)` };
     }
   }
 
-  // 2. Finviz EPS next 5Y (best-effort).
+  // 2. Finviz EPS next 5Y (best-effort) — used when Yahoo has no usable PEG.
   const fv = await getFinvizGrowth(ticker);
   if (fv !== null && Number.isFinite(fv)) {
-    return { value: Number(fv.toFixed(2)), source: 'Finviz EPS next 5Y' };
+    return { value: Number(fv.toFixed(2)), source: `Finviz "EPS next 5Y" · Yahoo PEG ${pegStr}` };
   }
 
   // 3. Conservative default.
-  return { value: DEFAULT_GROWTH, source: `conservative default (${DEFAULT_GROWTH}%)` };
+  return {
+    value: DEFAULT_GROWTH,
+    source: `conservative default (${DEFAULT_GROWTH}%) · Yahoo P/E ${peStr}, PEG ${pegStr}`,
+  };
 }
