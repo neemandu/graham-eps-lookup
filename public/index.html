@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Graham Value — Benjamin Graham Stock Analyzer & Tracker</title>
+    <title>Graham Value — Benjamin Graham Stock Analyzer</title>
     <link rel="stylesheet" href="style.css" />
     <link rel="stylesheet" href="track.css" />
   </head>
@@ -12,118 +12,124 @@
       <header>
         <h1>Graham Value</h1>
         <p class="subtitle">
-          Benjamin Graham's intrinsic value, defensive checklist, and quarterly
-          tracking — using live data from Yahoo Finance &amp; SEC EDGAR.
+          Benjamin Graham's intrinsic value, history &amp; defensive checklist —
+          live from Yahoo Finance &amp; SEC EDGAR.
         </p>
-        <nav class="tabs" role="tablist">
-          <button class="tab active" data-tab="calculator" role="tab">Calculator</button>
-          <button class="tab" data-tab="tracking" role="tab">Tracking</button>
-        </nav>
       </header>
 
-      <!-- ───────────── Calculator tab ───────────── -->
-      <section id="tab-calculator" class="tab-panel">
-        <form id="form" class="card">
-          <label class="field grow">
-            <span>Ticker symbol</span>
-            <input
-              id="ticker"
-              name="ticker"
-              type="text"
-              placeholder="e.g. ONDS"
-              autocomplete="off"
-              spellcheck="false"
-              required
-            />
-          </label>
-          <button id="submit" type="submit">Analyze</button>
-          <p class="formula">V = EPS &times; (8.5 + 2g) &times; 4.4 / Y</p>
-        </form>
+      <!-- Search -->
+      <form id="form" class="card">
+        <label class="field grow">
+          <span>Ticker symbol</span>
+          <input
+            id="ticker"
+            name="ticker"
+            type="text"
+            placeholder="e.g. ONDS"
+            autocomplete="off"
+            spellcheck="false"
+            required
+          />
+        </label>
+        <button id="submit" type="submit">Analyze</button>
+        <p class="formula">V = EPS &times; (8.5 + 2g) &times; 4.4 / Y</p>
+      </form>
 
-        <section id="status" class="status" hidden></section>
+      <!-- Watchlist quick-access chips -->
+      <div id="watchbar" class="watchbar" hidden>
+        <span class="watchbar-label">Tracked:</span>
+        <span id="chips"></span>
+      </div>
 
-        <section id="result" class="result" hidden>
-          <div class="card">
-            <div class="result-head">
-              <div>
-                <h2 id="r-name"></h2>
-                <span id="r-meta" class="muted"></span>
-              </div>
-              <div class="verdict" id="r-verdict"></div>
-            </div>
+      <section id="status" class="status" hidden></section>
 
-            <div class="grid">
-              <div class="stat">
-                <span class="stat-label">EPS (TTM)</span>
-                <span class="stat-value" id="r-eps"></span>
+      <section id="result" class="result" hidden>
+        <!-- Quarterly history (chart / table) — right under the search -->
+        <div class="card">
+          <div class="history-head-row">
+            <h3 id="hist-title">Quarterly history</h3>
+            <div class="head-actions">
+              <button id="track-toggle" class="track-toggle" type="button" hidden></button>
+              <div class="view-toggle" role="group" aria-label="History view">
+                <button id="view-chart" class="vt active" type="button" title="Chart view" aria-label="Chart view">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/></svg>
+                </button>
+                <button id="view-table" class="vt" type="button" title="Table view" aria-label="Table view">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="1.5"/><path d="M3 9h18M3 14h18M9 4v16"/></svg>
+                </button>
               </div>
-              <div class="stat">
-                <span class="stat-label">Current price</span>
-                <span class="stat-value" id="r-price"></span>
-              </div>
-              <div class="stat highlight">
-                <span class="stat-label">Graham intrinsic value</span>
-                <span class="stat-value" id="r-value"></span>
-              </div>
-              <div class="stat">
-                <span class="stat-label">Margin of safety</span>
-                <span class="stat-value" id="r-margin"></span>
-              </div>
-            </div>
-
-            <p class="warnings" id="r-warnings" hidden></p>
-          </div>
-
-          <div class="card">
-            <h3>Assumptions</h3>
-            <div class="row">
-              <label class="field">
-                <span>Growth rate <em>g</em> (%)</span>
-                <input id="growth" type="number" step="0.1" />
-                <small class="muted" id="growth-src"></small>
-              </label>
-              <label class="field">
-                <span>AAA bond yield <em>Y</em> (%)</span>
-                <input id="bondYield" type="number" step="0.1" />
-                <small class="muted" id="bond-src"></small>
-              </label>
-              <button id="recalc" type="button" class="secondary">Recalculate</button>
             </div>
           </div>
 
-          <div class="card">
-            <div class="checklist-head">
-              <h3>Defensive investor checklist</h3>
-              <span class="score" id="r-score"></span>
+          <div id="hist-chart" class="chart-wrap"><canvas id="series-canvas"></canvas></div>
+          <div id="hist-table" hidden></div>
+          <p id="hist-empty" class="muted small" hidden></p>
+          <p class="history-note muted small">
+            History uses the <strong>Graham Number</strong> √(22.5×EPS×BVPS) per
+            quarter (no growth needed; N/A when EPS or book value isn't positive).
+            EPS &amp; filings from SEC EDGAR, prices from Yahoo; per-share figures
+            are split-adjusted (approximate around split dates).
+          </p>
+        </div>
+
+        <!-- Current Graham analysis -->
+        <div class="card">
+          <div class="result-head">
+            <div>
+              <h2 id="r-name"></h2>
+              <span id="r-meta" class="muted"></span>
             </div>
-            <ul class="checklist" id="r-checklist"></ul>
+            <div class="verdict" id="r-verdict"></div>
           </div>
-        </section>
-      </section>
 
-      <!-- ───────────── Tracking tab ───────────── -->
-      <section id="tab-tracking" class="tab-panel" hidden>
-        <form id="add-form" class="card add-card">
-          <label class="field grow">
-            <span>Add a ticker to track</span>
-            <input
-              id="track-ticker"
-              name="ticker"
-              type="text"
-              placeholder="e.g. AAPL"
-              autocomplete="off"
-              spellcheck="false"
-              required
-            />
-          </label>
-          <button id="add-btn" type="submit">Track</button>
-        </form>
+          <div class="grid">
+            <div class="stat">
+              <span class="stat-label">EPS (TTM)</span>
+              <span class="stat-value" id="r-eps"></span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Current price</span>
+              <span class="stat-value" id="r-price"></span>
+            </div>
+            <div class="stat highlight">
+              <span class="stat-label">Graham intrinsic value</span>
+              <span class="stat-value" id="r-value"></span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Margin of safety</span>
+              <span class="stat-value" id="r-margin"></span>
+            </div>
+          </div>
 
-        <section id="track-status" class="status" hidden></section>
-        <section id="stocks"></section>
-        <section id="empty-watchlist" class="card empty-state" hidden>
-          Your watchlist is empty. Add a ticker above to start tracking it.
-        </section>
+          <p class="warnings" id="r-warnings" hidden></p>
+        </div>
+
+        <!-- Assumptions -->
+        <div class="card">
+          <h3>Assumptions</h3>
+          <div class="row">
+            <label class="field">
+              <span>Growth rate <em>g</em> (%)</span>
+              <input id="growth" type="number" step="0.1" />
+              <small class="muted" id="growth-src"></small>
+            </label>
+            <label class="field">
+              <span>AAA bond yield <em>Y</em> (%)</span>
+              <input id="bondYield" type="number" step="0.1" />
+              <small class="muted" id="bond-src"></small>
+            </label>
+            <button id="recalc" type="button" class="secondary">Recalculate</button>
+          </div>
+        </div>
+
+        <!-- Defensive checklist -->
+        <div class="card">
+          <div class="checklist-head">
+            <h3>Defensive investor checklist</h3>
+            <span class="score" id="r-score"></span>
+          </div>
+          <ul class="checklist" id="r-checklist"></ul>
+        </div>
       </section>
 
       <footer class="muted small">
@@ -133,43 +139,8 @@
       </footer>
     </main>
 
-    <!-- Chart.js (self-hosted UMD) as a classic script so it attaches window.Chart.
-         app.js / track.js load as ES modules so their top-level declarations are
-         scoped per-file (they share several names). The tab controller is the last
-         module, so it runs after them, with window.initTracking already defined. -->
+    <!-- Chart.js (self-hosted UMD) then the app as a module -->
     <script src="vendor/chart.min.js"></script>
     <script type="module" src="app.js"></script>
-    <script type="module" src="track.js"></script>
-    <script type="module">
-      // ── Tabs ──────────────────────────────────────────────────────────────
-      {
-        const tabs = document.querySelectorAll('.tab');
-        const panels = {
-          calculator: document.getElementById('tab-calculator'),
-          tracking: document.getElementById('tab-tracking'),
-        };
-        let trackingInited = false;
-
-        function activate(name) {
-          tabs.forEach((t) => t.classList.toggle('active', t.dataset.tab === name));
-          Object.entries(panels).forEach(([k, el]) => (el.hidden = k !== name));
-          if (name === 'tracking') {
-            if (!trackingInited && window.initTracking) {
-              trackingInited = true;
-              window.initTracking();
-            } else if (window.resizeTrackingCharts) {
-              // Charts laid out while hidden need a resize once visible.
-              window.resizeTrackingCharts();
-            }
-            history.replaceState(null, '', '#tracking');
-          } else {
-            history.replaceState(null, '', location.pathname);
-          }
-        }
-
-        tabs.forEach((t) => t.addEventListener('click', () => activate(t.dataset.tab)));
-        if (location.hash === '#tracking') activate('tracking');
-      }
-    </script>
   </body>
 </html>

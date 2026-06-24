@@ -11,6 +11,7 @@ import { analyzeTicker, TICKER_RE } from './analyze.js';
 import watchlistHandler from './api/watchlist.js';
 import historyHandler from './api/history.js';
 import snapshotHandler from './api/snapshot.js';
+import seriesHandler from './api/series.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -74,6 +75,7 @@ app.get('/api/analyze', async (req, res) => {
 app.all('/api/watchlist', (req, res) => watchlistHandler(req, res));
 app.get('/api/history', (req, res) => historyHandler(req, res));
 app.all('/api/snapshot', (req, res) => snapshotHandler(req, res));
+app.get('/api/series', (req, res) => seriesHandler(req, res));
 
 app.listen(PORT, () => {
   console.log(`Graham Value app running at http://localhost:${PORT}`);

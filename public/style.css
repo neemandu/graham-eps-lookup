@@ -230,3 +230,84 @@ footer { margin-top: 28px; text-align: center; line-height: 1.5; }
 @media (max-width: 480px) {
   .grid { grid-template-columns: 1fr; }
 }
+
+/* ── Watchlist chips ───────────────────────────────────────────── */
+.watchbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: -8px 2px 24px;
+}
+.watchbar-label { color: var(--muted); font-size: 0.82rem; }
+.chip {
+  display: inline-flex;
+  align-items: center;
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.chip-load,
+.chip-x {
+  background: transparent;
+  border: 0;
+  color: var(--text);
+  cursor: pointer;
+  margin: 0;
+  border-radius: 0;
+  font-weight: 600;
+}
+.chip-load { padding: 5px 4px 5px 12px; font-size: 0.82rem; }
+.chip-load:hover { color: var(--accent); filter: none; }
+.chip-x {
+  padding: 5px 10px 5px 6px;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1;
+}
+.chip-x:hover { color: var(--red); filter: none; }
+
+/* ── History header: title + view toggle + track button ────────── */
+.history-head-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.history-head-row h3 { margin: 0; }
+.head-actions { display: flex; align-items: center; gap: 10px; }
+
+.view-toggle {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  overflow: hidden;
+}
+.vt {
+  background: var(--card-2);
+  border: 0;
+  color: var(--muted);
+  margin: 0;
+  padding: 7px 11px;
+  border-radius: 0;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.vt:hover { color: var(--text); filter: none; }
+.vt.active { background: var(--accent); color: #fff; }
+
+.track-toggle {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  margin: 0;
+  padding: 7px 12px;
+  font-size: 0.82rem;
+  border-radius: 9px;
+  cursor: pointer;
+}
+.track-toggle:hover { color: var(--text); filter: none; }
+.track-toggle.on { color: var(--accent); border-color: var(--accent); }

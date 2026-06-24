@@ -56,19 +56,17 @@ Treasury + ~1% → a static default. FRED is reachable locally but tends to time
 out from Vercel's network, so production usually shows the Treasury proxy — the
 UI labels whichever source was used.
 
-## One page, two tabs
+## One search-driven page
 
-The app is a single page with **Calculator** and **Tracking** tabs. The
-Calculator runs the live Graham analysis; the Tracking tab is the watchlist
-dashboard with per-stock **price-vs-Graham-value charts** (Chart.js, self-hosted)
-and quarterly history tables.
+Everything lives on one page. Search a ticker and you get, right under the
+search box, its **quarterly history** as a multi-line chart (Price, Graham value,
+EPS, Margin of safety) with a **chart ⇄ table toggle**, followed by the live
+Graham analysis, editable assumptions, and the defensive checklist.
 
-## Tracking dashboard
-
-The Tracking tab keeps a **watchlist** and records a **quarterly snapshot** of
-each stock's Graham metrics — value, margin of safety, checklist score — plus a
-link to that quarter's SEC filing (10-Q / 10-K), visualized as a chart and a
-table.
+The history is computed on demand for **any** ticker via `/api/series` (SEC
+EDGAR + Yahoo); per-share figures are split-adjusted to match prices. A small
+**watchlist** of quick-access chips persists tracked tickers (★ Track button),
+and a daily GitHub Action keeps snapshots + backfill up to date for them.
 
 - Storage is **JSON committed to this repo** (`data/watchlist.json`,
   `data/history/<TICKER>.json`).
@@ -90,8 +88,9 @@ table.
 | ----------------- | ------- |
 | `api/analyze.js`  | Production endpoint `/api/analyze` (Vercel) |
 | `api/eps.js`      | Original simple EPS-only endpoint |
+| `api/series.js`   | On-demand historical series for any ticker (chart) |
 | `api/watchlist.js`| Watchlist GET/POST/DELETE |
-| `api/history.js`  | Quarterly history (single ticker or overview) |
+| `api/history.js`  | Stored quarterly snapshots (single ticker or overview) |
 | `api/snapshot.js` | Manual snapshot trigger |
 | `server.js`       | Express server (local dev) exposing the same routes |
 | `analyze.js`      | Shared orchestration (Yahoo + FRED + value + checklist) |
