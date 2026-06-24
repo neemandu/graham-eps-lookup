@@ -6,6 +6,7 @@
 
 import { getFullStockData } from './yahoo.js';
 import { getAaaYield } from './fred.js';
+import { resolveGrowth } from './growth.js';
 import { calculateGrahamValue, marginOfSafety, defensiveCriteria } from './graham.js';
 
 export const TICKER_RE = /^[A-Za-z.\-]{1,12}$/;
@@ -24,18 +25,13 @@ export async function analyzeTicker(ticker, opts = {}) {
     bondYield = { value: f.value, source: f.source, auto: true };
   }
 
-  // Growth g — manual override, else Yahoo analyst estimate, else 7%.
+  // Growth g — manual override, else the resolver chain (P/E÷PEG → Finviz → 15%).
   let growth;
   if (provided(opts.growth)) {
     growth = { value: Number(opts.growth), source: 'manual input', auto: false };
-  } else if (stock.growthEstimate.rate !== null) {
-    growth = {
-      value: stock.growthEstimate.rate,
-      source: stock.growthEstimate.source,
-      auto: true,
-    };
   } else {
-    growth = { value: 7, source: 'default (7%)', auto: true };
+    const g = await resolveGrowth(stock, stock.symbol);
+    growth = { value: g.value, source: g.source, auto: true };
   }
 
   const result = calculateGrahamValue({

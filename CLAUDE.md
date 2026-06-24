@@ -43,9 +43,13 @@ Keep the endpoints thin — shared logic lives in `analyze.js` / `yahoo.js` /
 
 ## Resolving g and Y
 
-- **g (growth):** `getFullStockData` reads Yahoo's `earningsTrend`. Yahoo dropped
-  the long-term `+5y` figure, so we prefer `+1y`, then `0y`, then `+1q`. The
-  formula is very sensitive to `g`, so the UI always lets the user override it.
+- **g (growth):** `growth.js#resolveGrowth` runs a chain for the ~5-yr expected
+  rate: (1) **Yahoo P/E ÷ PEG** — since PEG = P/E ÷ g, this recovers the 5-yr
+  growth Yahoo no longer exposes directly (`yahoo.js` provides `trailingPE` +
+  `pegRatio`); (2) **Finviz "EPS next 5Y"** (`finviz.js`) for names without a PEG
+  — best-effort, often 403s from Vercel's datacenter IPs, so it usually only
+  fires locally / in the Action; (3) a **conservative 15% default**. The formula
+  is very sensitive to `g`, so the UI always lets the user override it.
 - **Y (AAA bond yield):** `fred.js` tries, in order: (1) FRED `DAAA` Moody's Aaa
   CSV, (2) Yahoo `^TNX` 10-yr Treasury + ~1.0%, (3) a static default. Note FRED
   is reachable from local Node but **times out from Vercel's AWS network**, so in

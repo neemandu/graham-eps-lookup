@@ -63,7 +63,7 @@ const INFO = {
   verdict:
     'Whether the current price is below (undervalued) or above (overvalued) the Graham intrinsic value.',
   growth:
-    'Expected annual EPS growth (g) over ~7–10 years. Auto-filled from Yahoo analyst estimates; edit it to your own view and Recalculate. The formula is very sensitive to this.',
+    'Expected annual EPS growth (g), ~5-yr. Derived from Yahoo P/E ÷ PEG; for companies without a PEG it tries Finviz "EPS next 5Y", else a conservative 15% default. Edit it to your own view and Recalculate — the formula is very sensitive to this.',
   bond:
     "Current AAA corporate-bond yield (Y). Source: FRED (Moody's Seasoned Aaa); falls back to the 10-year Treasury yield + ~1% if FRED is unreachable.",
   historyTitle:

@@ -246,6 +246,7 @@ export async function getFullStockData(symbol) {
     bookValue: num(ks.bookValue),
     priceToBook: num(ks.priceToBook),
     trailingPE: q.trailingPE ?? num(sd.trailingPE),
+    pegRatio: num(ks.pegRatio), // PEG (5-yr expected); g ≈ P/E ÷ PEG
 
     currentRatio: num(fd.currentRatio),
     debtToEquity: num(fd.debtToEquity), // Yahoo expresses this as a percent
