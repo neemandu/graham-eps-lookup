@@ -226,7 +226,9 @@ async function loadHistory(ticker, card) {
 }
 
 // Return HTML for the history section: either a friendly empty state or a table.
-// Snapshots are shown oldest → newest, which reads well for tracking over time.
+// Two valuation bases coexist: the current quarter uses the live Graham *formula*
+// (with analyst growth); backfilled historical quarters use the Graham *Number*
+// √(22.5·EPS·BVPS), which needs no growth. Shown newest → oldest.
 function renderHistory(history) {
   if (!history.length) {
     return (
@@ -235,7 +237,22 @@ function renderHistory(history) {
     );
   }
 
-  const rows = history
+  const isGN = (s) => s.method === 'Graham Number';
+
+  // Value cell: distinguish "not meaningful" (Graham Number needs EPS & book
+  // value > 0) from genuinely missing data.
+  const valueCell = (s, cur) => {
+    if (s.intrinsicValue === null || s.intrinsicValue === undefined) {
+      return isGN(s)
+        ? '<span class="muted" title="Graham Number needs positive EPS and book value">N/A</span>'
+        : '—';
+    }
+    return fmtMoney(s.intrinsicValue, cur);
+  };
+
+  const ordered = history.slice().reverse(); // newest first
+
+  const rows = ordered
     .map((s) => {
       const cur = s.currency || 'USD';
       const filing =
@@ -248,15 +265,19 @@ function renderHistory(history) {
         s.criteriaPassed != null && s.criteriaTotal != null
           ? `${s.criteriaPassed} / ${s.criteriaTotal}`
           : '—';
+      const basis = isGN(s)
+        ? '<span class="basis gn">Graham Nº</span>'
+        : '<span class="basis gf">Formula</span>';
       return `
         <tr>
           <td>${esc(s.quarter || s.quarterEnd || '—')}</td>
           <td>${fmtMoney(s.eps, cur)}</td>
-          <td>${fmtNum(s.growth, 2)}</td>
-          <td>${fmtNum(s.bondYield, 2)}</td>
-          <td>${fmtMoney(s.intrinsicValue, cur)}</td>
+          <td>${valueCell(s, cur)}</td>
+          <td>${basis}</td>
           <td>${fmtMoney(s.price, cur)}</td>
           <td>${fmtPct(s.marginOfSafety)}</td>
+          <td>${fmtNum(s.growth, 1)}</td>
+          <td>${fmtNum(s.bondYield, 2)}</td>
           <td>${checklist}</td>
           <td>${filing}</td>
         </tr>`;
@@ -269,19 +290,27 @@ function renderHistory(history) {
         <thead>
           <tr>
             <th>Quarter</th>
-            <th>EPS</th>
-            <th>g (%)</th>
-            <th>Y (%)</th>
-            <th>Intrinsic value</th>
+            <th>EPS (TTM)</th>
+            <th>Value</th>
+            <th>Basis</th>
             <th>Price</th>
             <th>Margin</th>
+            <th>g (%)</th>
+            <th>Y (%)</th>
             <th>Checklist</th>
             <th>Filing</th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>
       </table>
-    </div>`;
+    </div>
+    <p class="history-note muted small">
+      <strong>Basis:</strong> the current quarter uses the live Graham formula
+      V = EPS×(8.5+2g)×4.4/Y; historical quarters use the Graham Number
+      √(22.5×EPS×BVPS), which needs no growth estimate (N/A when EPS or book
+      value isn't positive). Historical EPS &amp; filings from SEC EDGAR, prices
+      from Yahoo.
+    </p>`;
 }
 
 // ── Event handlers ──────────────────────────────────────────────────────────

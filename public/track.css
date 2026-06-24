@@ -131,3 +131,15 @@ table.history a:hover { text-decoration: underline; }
 @media (max-width: 480px) {
   .add-card { flex-direction: column; align-items: stretch; }
 }
+
+/* Valuation-basis badges in the history table */
+.basis {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.basis.gn { background: rgba(79, 140, 255, 0.15); color: var(--accent); }
+.basis.gf { background: rgba(46, 204, 113, 0.15); color: var(--green); }
+.history-note { margin: 10px 2px 0; line-height: 1.5; }

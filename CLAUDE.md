@@ -90,6 +90,17 @@ A second page (`public/track.html`) maintains a **watchlist** and records a
   write").
 - **Filing links:** `sec.js#getFilings` resolves recent 10-Q/10-K links from SEC
   EDGAR (ticker → CIK → submissions). US listings only; non-US returns none.
+- **Historical backfill:** `lib/backfill.js` + `scripts/backfill.js` reconstruct
+  a stock's full quarterly history valued with the **Graham Number**
+  √(22.5·EPS·BVPS) (needs no growth estimate). EPS, book value, and the
+  per-quarter filing link come from SEC EDGAR XBRL (`companyconcept`); prices
+  from the Yahoo chart API. TTM EPS sums four quarters of diluted EPS (Q4 derived
+  as FY − 9-month YTD); values are as-originally-published (earliest filing). The
+  Graham Number is null when EPS or BVPS isn't positive — flagged "N/A", never
+  faked. Snapshots carry `method` ("Graham Number" vs the live "Graham formula")
+  so the history table labels each row's basis. Run with `npm run backfill
+  [TICKER...]`; the daily Action also runs it (idempotent) so newly-added tickers
+  auto-backfill.
 
 ### Production note
 On Vercel the app needs a `GITHUB_TOKEN` env var for watchlist *writes*. Without

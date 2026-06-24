@@ -67,6 +67,12 @@ score — plus a link to that quarter's SEC filing (10-Q / 10-K).
 - A **GitHub Action** (`.github/workflows/snapshot.yml`, daily) captures a new
   snapshot only when a company's most-recent reported quarter advances — i.e.
   right after they publish. It commits the data itself.
+- **Historical backfill** (`npm run backfill [TICKER...]`) reconstructs a stock's
+  full quarterly history from SEC EDGAR (EPS, book value, filing links) + Yahoo
+  (price), valued with the **Graham Number** √(22.5×EPS×BVPS) — no growth
+  estimate needed. Goes back as far as the company has filed (10–19 yrs for
+  mature names; values show N/A in quarters with non-positive EPS/book value).
+  The daily Action runs it too, so newly-added tickers auto-backfill.
 - Add/remove from the website needs a `GITHUB_TOKEN` env var on Vercel (writes
   go through the GitHub API). Reads and the scheduled job work without it.
 
