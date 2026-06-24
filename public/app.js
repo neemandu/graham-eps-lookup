@@ -48,6 +48,131 @@ function esc(s) {
   );
 }
 
+// ── Info tooltips ────────────────────────────────────────────────────────────
+// What each thing means + where its value comes from. Keyed by data-info.
+const INFO = {
+  formula:
+    "Benjamin Graham's intrinsic-value formula. 8.5 is the P/E he assigned a no-growth company; 4.4 is the 1962 AAA bond yield he used as a baseline. Source: Graham, The Intelligent Investor.",
+  eps:
+    'Earnings per share over the trailing twelve months. Source: Yahoo Finance (epsTrailingTwelveMonths).',
+  price: 'Latest regular-market share price. Source: Yahoo Finance.',
+  value:
+    'Graham intrinsic value V = EPS×(8.5+2g)×4.4/Y, computed from the EPS, growth (g) and bond yield (Y) shown under Assumptions.',
+  margin:
+    '(Graham value − price) ÷ price. Positive means the stock trades below its Graham value. Computed.',
+  verdict:
+    'Whether the current price is below (undervalued) or above (overvalued) the Graham intrinsic value.',
+  growth:
+    'Expected annual EPS growth (g) over ~7–10 years. Auto-filled from Yahoo analyst estimates; edit it to your own view and Recalculate. The formula is very sensitive to this.',
+  bond:
+    "Current AAA corporate-bond yield (Y). Source: FRED (Moody's Seasoned Aaa); falls back to the 10-year Treasury yield + ~1% if FRED is unreachable.",
+  historyTitle:
+    'Each fiscal quarter back to the company\'s earliest SEC filing. Historical valuation uses the Graham Number; the current quarter uses the live formula.',
+  chart:
+    'Four series over time. Left axis ($): Price, Graham value, EPS. Right axis (%): Margin of safety. Sources: price from Yahoo; EPS & book value from SEC EDGAR. Click a legend item to hide/show a line.',
+  reports:
+    "Links to each quarter's official report filed with the SEC (10-Q quarterly, 10-K annual). Source: SEC EDGAR.",
+  checklist:
+    "Graham's qualitative screen for the 'defensive investor'. Source: The Intelligent Investor, adapted to available data.",
+  // History table columns
+  col_quarter: "The company's fiscal reporting quarter (e.g. 2025-Q4).",
+  col_eps:
+    'Trailing-12-month EPS, split-adjusted, summed from quarterly diluted EPS. Source: SEC EDGAR XBRL.',
+  col_value:
+    'Graham Number = √(22.5 × EPS × book value per share). A growth-free fair value. N/A when EPS or book value isn\'t positive. Computed from SEC data.',
+  col_margin: '(Graham Number − price) ÷ price for that quarter. Computed.',
+  col_price:
+    "Split-adjusted closing price near the quarter's end date. Source: Yahoo chart.",
+  col_filing:
+    'The 10-Q or 10-K that originally reported this quarter. Opens SEC EDGAR.',
+  // Checklist criteria (by criterion key)
+  size:
+    'Market capitalization. Graham wanted large, established firms; we use ≥ $2B as a modern proxy. Source: Yahoo Finance.',
+  currentRatio:
+    'Current assets ÷ current liabilities. ≥ 2 signals a strong balance sheet. Source: Yahoo Finance (financialData).',
+  debt:
+    'Total debt ÷ equity (as a %). Lower means more conservative leverage. Source: Yahoo Finance.',
+  earnings:
+    'Positive trailing-12-month EPS — Graham required a record of stable earnings. Source: Yahoo Finance.',
+  dividend:
+    'Whether the company currently pays a dividend; Graham wanted a long, uninterrupted record. Source: Yahoo Finance.',
+  pe: 'Price ÷ EPS (trailing). Graham capped a defensive buy at ≤ 15. Source: Yahoo Finance.',
+  pb:
+    'Price ÷ book value per share. Graham wanted ≤ 1.5. Source: Yahoo Finance (defaultKeyStatistics).',
+  pepb:
+    'P/E × P/B. Graham said the product shouldn\'t exceed 22.5 (e.g. 15 × 1.5). Computed.',
+};
+
+// Fill in any <span class="info" data-info="key"> under root: glyph, tip, a11y.
+function hydrateInfo(root = document) {
+  root.querySelectorAll('.info[data-info]').forEach((el) => {
+    el.dataset.tip = INFO[el.dataset.info] || '';
+    if (!el.textContent) el.textContent = 'i';
+    el.tabIndex = 0;
+    el.setAttribute('role', 'button');
+    el.setAttribute('aria-label', 'More information');
+  });
+}
+const info = (key) => `<span class="info" data-info="${key}"></span>`;
+
+// One shared floating tooltip, positioned to stay on-screen.
+const tooltip = (() => {
+  let el = null;
+  const ensure = () => {
+    if (!el) {
+      el = document.createElement('div');
+      el.className = 'tooltip';
+      el.hidden = true;
+      document.body.appendChild(el);
+    }
+    return el;
+  };
+  function show(target) {
+    const text = target.dataset.tip;
+    if (!text) return;
+    const e = ensure();
+    e.textContent = text;
+    e.hidden = false;
+    e.style.visibility = 'hidden';
+    const r = target.getBoundingClientRect();
+    const box = e.getBoundingClientRect();
+    let top = r.top - box.height - 8;
+    if (top < 8) top = r.bottom + 8; // flip below if no room above
+    let left = r.left + r.width / 2 - box.width / 2;
+    left = Math.max(8, Math.min(left, window.innerWidth - box.width - 8));
+    e.style.top = `${top + window.scrollY}px`;
+    e.style.left = `${left + window.scrollX}px`;
+    e.style.visibility = 'visible';
+  }
+  const hide = () => {
+    if (el) el.hidden = true;
+  };
+  return { show, hide };
+})();
+document.addEventListener('pointerover', (e) => {
+  const i = e.target.closest && e.target.closest('.info[data-tip]');
+  if (i) tooltip.show(i);
+});
+document.addEventListener('pointerout', (e) => {
+  const i = e.target.closest && e.target.closest('.info');
+  if (i) tooltip.hide();
+});
+document.addEventListener('focusin', (e) => {
+  const i = e.target.closest && e.target.closest('.info[data-tip]');
+  if (i) tooltip.show(i);
+});
+document.addEventListener('focusout', () => tooltip.hide());
+// Touch: tap an icon to show, tap elsewhere to dismiss.
+document.addEventListener('click', (e) => {
+  const i = e.target.closest && e.target.closest('.info[data-tip]');
+  if (i) {
+    e.preventDefault();
+    tooltip.show(i);
+  } else {
+    tooltip.hide();
+  }
+});
+
 // ── Search / analyze ─────────────────────────────────────────────────────────
 form.addEventListener('submit', (e) => {
   e.preventDefault();
@@ -142,12 +267,13 @@ function renderChecklist(criteria, currency) {
     li.className = `check ${state}`;
     li.innerHTML =
       `<span class="check-icon">${icon}</span>` +
-      `<span class="check-label">${esc(c.label)}</span>` +
+      `<span class="check-label">${esc(c.label)} ${INFO[c.key] ? info(c.key) : ''}</span>` +
       `<span class="check-value">${formatCriterion(c, currency)}</span>` +
       `<span class="check-threshold muted">${esc(c.threshold)}</span>`;
     ul.appendChild(li);
   }
   $('r-score').textContent = `${criteria.passed} / ${criteria.total} passed`;
+  hydrateInfo(ul);
 }
 function formatCriterion(c, currency) {
   if (c.value === null || c.value === undefined) return '—';
@@ -199,6 +325,8 @@ function renderHistory(series, currency) {
   buildChart(series, currency);
   $('hist-table').innerHTML = renderTable(series, currency);
   $('hist-reports').innerHTML = renderReports(series);
+  hydrateInfo($('hist-table'));
+  hydrateInfo($('hist-reports'));
 }
 
 // Always-visible quick links to recent quarters' SEC filings (newest first).
@@ -220,7 +348,7 @@ function renderReports(series) {
     all.length > MAX
       ? `<span class="reports-more muted small">+${all.length - MAX} more in the table view</span>`
       : '';
-  return `<span class="reports-label">Quarterly reports:</span>${links}${more}`;
+  return `<span class="reports-label">Quarterly reports: ${info('reports')}</span>${links}${more}`;
 }
 
 function buildChart(series, currency) {
@@ -322,8 +450,12 @@ function renderTable(series, currency) {
       <table class="history">
         <thead>
           <tr>
-            <th>Quarter</th><th>EPS (TTM)</th><th>Graham value</th>
-            <th>Margin</th><th>Price</th><th>Filing</th>
+            <th>Quarter ${info('col_quarter')}</th>
+            <th>EPS (TTM) ${info('col_eps')}</th>
+            <th>Graham value ${info('col_value')}</th>
+            <th>Margin ${info('col_margin')}</th>
+            <th>Price ${info('col_price')}</th>
+            <th>Filing ${info('col_filing')}</th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>
@@ -420,6 +552,7 @@ async function removeTicker(ticker) {
 }
 
 // ── Init ─────────────────────────────────────────────────────────────────────
+hydrateInfo(); // static info icons in the page
 loadWatchlist();
 
 // Deep link: /?ticker=AAPL analyzes on load (shareable links).

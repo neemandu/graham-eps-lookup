@@ -389,3 +389,45 @@ footer { margin-top: 28px; text-align: center; line-height: 1.5; }
   font-size: 0.72rem;
 }
 .report-link:hover .report-form { color: var(--accent); }
+
+/* ── Info icons + tooltip ──────────────────────────────────────── */
+.info {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: 1px solid var(--muted);
+  color: var(--muted);
+  font-size: 10px;
+  font-style: italic;
+  font-weight: 700;
+  font-family: Georgia, "Times New Roman", serif;
+  line-height: 1;
+  cursor: help;
+  vertical-align: middle;
+  user-select: none;
+  flex: none;
+  transition: color 0.12s, border-color 0.12s;
+}
+.info:hover,
+.info:focus { color: var(--accent); border-color: var(--accent); outline: none; }
+th .info { vertical-align: middle; }
+
+.tooltip {
+  position: absolute;
+  z-index: 1000;
+  max-width: 280px;
+  background: #0b0d12;
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 9px 12px;
+  border-radius: 9px;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  text-align: left;
+  font-weight: 400;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+}

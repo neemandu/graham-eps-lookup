@@ -32,7 +32,10 @@
           />
         </label>
         <button id="submit" type="submit">Analyze</button>
-        <p class="formula">V = EPS &times; (8.5 + 2g) &times; 4.4 / Y</p>
+        <p class="formula">
+          V = EPS &times; (8.5 + 2g) &times; 4.4 / Y
+          <span class="info" data-info="formula"></span>
+        </p>
       </form>
 
       <!-- Watchlist quick-access chips -->
@@ -47,7 +50,7 @@
         <!-- Quarterly history (chart / table) — right under the search -->
         <div class="card panel-history">
           <div class="history-head-row">
-            <h3 id="hist-title">Quarterly history</h3>
+            <h3><span id="hist-title">Quarterly history</span> <span class="info" data-info="chart"></span></h3>
             <div class="head-actions">
               <button id="track-toggle" class="track-toggle" type="button" hidden></button>
               <div class="view-toggle" role="group" aria-label="History view">
@@ -87,19 +90,19 @@
 
           <div class="grid">
             <div class="stat">
-              <span class="stat-label">EPS (TTM)</span>
+              <span class="stat-label">EPS (TTM) <span class="info" data-info="eps"></span></span>
               <span class="stat-value" id="r-eps"></span>
             </div>
             <div class="stat">
-              <span class="stat-label">Current price</span>
+              <span class="stat-label">Current price <span class="info" data-info="price"></span></span>
               <span class="stat-value" id="r-price"></span>
             </div>
             <div class="stat highlight">
-              <span class="stat-label">Graham intrinsic value</span>
+              <span class="stat-label">Graham intrinsic value <span class="info" data-info="value"></span></span>
               <span class="stat-value" id="r-value"></span>
             </div>
             <div class="stat">
-              <span class="stat-label">Margin of safety</span>
+              <span class="stat-label">Margin of safety <span class="info" data-info="margin"></span></span>
               <span class="stat-value" id="r-margin"></span>
             </div>
           </div>
@@ -112,12 +115,12 @@
           <h3>Assumptions</h3>
           <div class="row">
             <label class="field">
-              <span>Growth rate <em>g</em> (%)</span>
+              <span>Growth rate <em>g</em> (%) <span class="info" data-info="growth"></span></span>
               <input id="growth" type="number" step="0.1" />
               <small class="muted" id="growth-src"></small>
             </label>
             <label class="field">
-              <span>AAA bond yield <em>Y</em> (%)</span>
+              <span>AAA bond yield <em>Y</em> (%) <span class="info" data-info="bond"></span></span>
               <input id="bondYield" type="number" step="0.1" />
               <small class="muted" id="bond-src"></small>
             </label>
@@ -128,7 +131,7 @@
         <!-- Defensive checklist -->
         <div class="card panel-checklist">
           <div class="checklist-head">
-            <h3>Defensive investor checklist</h3>
+            <h3>Defensive investor checklist <span class="info" data-info="checklist"></span></h3>
             <span class="score" id="r-score"></span>
           </div>
           <ul class="checklist" id="r-checklist"></ul>
