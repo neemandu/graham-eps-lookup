@@ -56,11 +56,19 @@ Treasury + ~1% → a static default. FRED is reachable locally but tends to time
 out from Vercel's network, so production usually shows the Treasury proxy — the
 UI labels whichever source was used.
 
+## One page, two tabs
+
+The app is a single page with **Calculator** and **Tracking** tabs. The
+Calculator runs the live Graham analysis; the Tracking tab is the watchlist
+dashboard with per-stock **price-vs-Graham-value charts** (Chart.js, self-hosted)
+and quarterly history tables.
+
 ## Tracking dashboard
 
-A second page (`/track.html`) keeps a **watchlist** and records a **quarterly
-snapshot** of each stock's Graham metrics — value, margin of safety, checklist
-score — plus a link to that quarter's SEC filing (10-Q / 10-K).
+The Tracking tab keeps a **watchlist** and records a **quarterly snapshot** of
+each stock's Graham metrics — value, margin of safety, checklist score — plus a
+link to that quarter's SEC filing (10-Q / 10-K), visualized as a chart and a
+table.
 
 - Storage is **JSON committed to this repo** (`data/watchlist.json`,
   `data/history/<TICKER>.json`).

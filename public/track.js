@@ -4,10 +4,24 @@
 
 const addForm = document.getElementById('add-form');
 const addBtn = document.getElementById('add-btn');
-const tickerInput = document.getElementById('ticker');
-const statusEl = document.getElementById('status');
+const tickerInput = document.getElementById('track-ticker');
+const statusEl = document.getElementById('track-status');
 const stocksEl = document.getElementById('stocks');
 const emptyWatchlistEl = document.getElementById('empty-watchlist');
+
+// Live Chart.js instances, so we can resize them when the tab becomes visible
+// and destroy them before re-rendering the watchlist.
+const charts = [];
+function destroyCharts() {
+  while (charts.length) {
+    try {
+      charts.pop().destroy();
+    } catch {
+      /* ignore */
+    }
+  }
+}
+window.resizeTrackingCharts = () => charts.forEach((c) => c.resize());
 
 // ── Formatting helpers (same style as app.js) ───────────────────────────────
 
@@ -85,6 +99,7 @@ async function removeTicker(ticker) {
 // Build the whole list of stock cards from a watchlist array, then load each
 // stock's live + history data independently so one failure can't blank the page.
 function renderWatchlist(watchlist) {
+  destroyCharts();
   stocksEl.innerHTML = '';
   emptyWatchlistEl.hidden = watchlist.length > 0;
 
@@ -218,11 +233,81 @@ async function loadHistory(ticker, card) {
 
     const history = Array.isArray(data.history) ? data.history : [];
     container.innerHTML = renderHistory(history);
+
+    // Build the price-vs-Graham-value chart, if there's anything to plot.
+    const canvas = container.querySelector('canvas');
+    if (canvas && window.Chart) buildChart(canvas, history);
   } catch (err) {
     container.innerHTML = `<p class="stock-status error">Couldn't load history: ${esc(
       err.message || 'request failed.'
     )}</p>`;
   }
+}
+
+// Line chart: price vs Graham value across quarters (oldest → newest).
+function buildChart(canvas, history) {
+  const labels = history.map((s) => s.quarter || s.quarterEnd || '');
+  const price = history.map((s) => (typeof s.price === 'number' ? s.price : null));
+  const value = history.map((s) =>
+    typeof s.intrinsicValue === 'number' ? s.intrinsicValue : null
+  );
+
+  const TEXT = '#9aa0ab';
+  const GRID = 'rgba(255,255,255,0.06)';
+
+  const chart = new window.Chart(canvas.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Price',
+          data: price,
+          borderColor: '#5aa9ff',
+          backgroundColor: 'rgba(90,169,255,0.12)',
+          borderWidth: 2,
+          pointRadius: 2,
+          tension: 0.25,
+          spanGaps: true,
+          fill: true,
+        },
+        {
+          label: 'Graham value',
+          data: value,
+          borderColor: '#2ecc71',
+          backgroundColor: 'rgba(46,204,113,0.10)',
+          borderWidth: 2,
+          pointRadius: 3,
+          tension: 0.25,
+          spanGaps: false, // leave gaps where the value is N/A
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { color: TEXT, usePointStyle: true, boxWidth: 8 } },
+        tooltip: {
+          callbacks: {
+            label: (ctx) =>
+              ctx.parsed.y == null
+                ? `${ctx.dataset.label}: N/A`
+                : `${ctx.dataset.label}: $${ctx.parsed.y.toFixed(2)}`,
+          },
+        },
+      },
+      scales: {
+        x: { ticks: { color: TEXT, maxRotation: 0, autoSkip: true }, grid: { color: GRID } },
+        y: {
+          ticks: { color: TEXT, callback: (v) => '$' + v },
+          grid: { color: GRID },
+        },
+      },
+    },
+  });
+  charts.push(chart);
 }
 
 // Return HTML for the history section: either a friendly empty state or a table.
@@ -249,6 +334,15 @@ function renderHistory(history) {
     }
     return fmtMoney(s.intrinsicValue, cur);
   };
+
+  // Chart canvas (built after insertion in loadHistory). Shown when we have at
+  // least one plottable price or value point.
+  const plottable = history.some(
+    (s) => typeof s.price === 'number' || typeof s.intrinsicValue === 'number'
+  );
+  const chart = plottable
+    ? '<div class="chart-wrap"><canvas></canvas></div>'
+    : '';
 
   const ordered = history.slice().reverse(); // newest first
 
@@ -285,6 +379,7 @@ function renderHistory(history) {
     .join('');
 
   return `
+    ${chart}
     <div class="history-wrap">
       <table class="history">
         <thead>
@@ -346,8 +441,13 @@ async function onRemove(ticker) {
 }
 
 // ── Initial load ────────────────────────────────────────────────────────────
+// Exposed so the tab controller can lazily initialise the Tracking tab the first
+// time it's opened (avoids fetching data / sizing charts while hidden).
 
-(async function init() {
+let started = false;
+window.initTracking = async function initTracking() {
+  if (started) return;
+  started = true;
   showStatus('Loading watchlist…', 'loading');
   try {
     const watchlist = await getWatchlist();
@@ -356,4 +456,4 @@ async function onRemove(ticker) {
   } catch (err) {
     showStatus(err.message || 'Could not load watchlist.', 'error');
   }
-})();
+};

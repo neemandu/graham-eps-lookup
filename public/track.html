@@ -2,58 +2,12 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tracking — Graham Value Watchlist</title>
-    <!-- Shared theme first, then page-specific additions -->
-    <link rel="stylesheet" href="style.css" />
-    <link rel="stylesheet" href="track.css" />
+    <!-- The tracker is now a tab on the main page. Redirect old links. -->
+    <meta http-equiv="refresh" content="0; url=/#tracking" />
+    <link rel="canonical" href="/#tracking" />
+    <title>Redirecting…</title>
   </head>
   <body>
-    <main class="container">
-      <header>
-        <a class="back-link" href="/">&larr; Calculator</a>
-        <h1>Tracking</h1>
-        <p class="subtitle">
-          Maintain a watchlist and review each stock's Graham metrics quarter by
-          quarter. A snapshot is recorded after every company report.
-        </p>
-      </header>
-
-      <!-- Add-to-watchlist control -->
-      <form id="add-form" class="card add-card">
-        <label class="field grow">
-          <span>Add a ticker to track</span>
-          <input
-            id="ticker"
-            name="ticker"
-            type="text"
-            placeholder="e.g. AAPL"
-            autocomplete="off"
-            spellcheck="false"
-            required
-          />
-        </label>
-        <button id="add-btn" type="submit">Track</button>
-      </form>
-
-      <!-- Page-level status (watchlist load / add / remove) -->
-      <section id="status" class="status" hidden></section>
-
-      <!-- One card per tracked stock is injected here -->
-      <section id="stocks"></section>
-
-      <!-- Shown when the watchlist is empty -->
-      <section id="empty-watchlist" class="card empty-state" hidden>
-        Your watchlist is empty. Add a ticker above to start tracking it.
-      </section>
-
-      <footer class="muted small">
-        Educational use only — not investment advice. Live values via Yahoo
-        Finance; quarterly snapshots are captured automatically after each
-        company report.
-      </footer>
-    </main>
-
-    <script src="track.js"></script>
+    <p>Redirecting to <a href="/#tracking">the tracking dashboard</a>…</p>
   </body>
 </html>

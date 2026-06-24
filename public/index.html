@@ -3,107 +3,173 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Graham Value — Benjamin Graham Stock Analyzer</title>
+    <title>Graham Value — Benjamin Graham Stock Analyzer & Tracker</title>
     <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="track.css" />
   </head>
   <body>
     <main class="container">
       <header>
         <h1>Graham Value</h1>
         <p class="subtitle">
-          Benjamin Graham's intrinsic value &amp; defensive checklist, using live
-          data from Yahoo Finance.
+          Benjamin Graham's intrinsic value, defensive checklist, and quarterly
+          tracking — using live data from Yahoo Finance &amp; SEC EDGAR.
         </p>
-        <nav class="topnav"><a href="/track.html">Tracking dashboard →</a></nav>
+        <nav class="tabs" role="tablist">
+          <button class="tab active" data-tab="calculator" role="tab">Calculator</button>
+          <button class="tab" data-tab="tracking" role="tab">Tracking</button>
+        </nav>
       </header>
 
-      <form id="form" class="card">
-        <label class="field grow">
-          <span>Ticker symbol</span>
-          <input
-            id="ticker"
-            name="ticker"
-            type="text"
-            placeholder="e.g. ONDS"
-            autocomplete="off"
-            spellcheck="false"
-            required
-          />
-        </label>
-        <button id="submit" type="submit">Analyze</button>
-        <p class="formula">V = EPS &times; (8.5 + 2g) &times; 4.4 / Y</p>
-      </form>
+      <!-- ───────────── Calculator tab ───────────── -->
+      <section id="tab-calculator" class="tab-panel">
+        <form id="form" class="card">
+          <label class="field grow">
+            <span>Ticker symbol</span>
+            <input
+              id="ticker"
+              name="ticker"
+              type="text"
+              placeholder="e.g. ONDS"
+              autocomplete="off"
+              spellcheck="false"
+              required
+            />
+          </label>
+          <button id="submit" type="submit">Analyze</button>
+          <p class="formula">V = EPS &times; (8.5 + 2g) &times; 4.4 / Y</p>
+        </form>
 
-      <section id="status" class="status" hidden></section>
+        <section id="status" class="status" hidden></section>
 
-      <section id="result" class="result" hidden>
-        <!-- Header -->
-        <div class="card">
-          <div class="result-head">
-            <div>
-              <h2 id="r-name"></h2>
-              <span id="r-meta" class="muted"></span>
+        <section id="result" class="result" hidden>
+          <div class="card">
+            <div class="result-head">
+              <div>
+                <h2 id="r-name"></h2>
+                <span id="r-meta" class="muted"></span>
+              </div>
+              <div class="verdict" id="r-verdict"></div>
             </div>
-            <div class="verdict" id="r-verdict"></div>
+
+            <div class="grid">
+              <div class="stat">
+                <span class="stat-label">EPS (TTM)</span>
+                <span class="stat-value" id="r-eps"></span>
+              </div>
+              <div class="stat">
+                <span class="stat-label">Current price</span>
+                <span class="stat-value" id="r-price"></span>
+              </div>
+              <div class="stat highlight">
+                <span class="stat-label">Graham intrinsic value</span>
+                <span class="stat-value" id="r-value"></span>
+              </div>
+              <div class="stat">
+                <span class="stat-label">Margin of safety</span>
+                <span class="stat-value" id="r-margin"></span>
+              </div>
+            </div>
+
+            <p class="warnings" id="r-warnings" hidden></p>
           </div>
 
-          <div class="grid">
-            <div class="stat">
-              <span class="stat-label">EPS (TTM)</span>
-              <span class="stat-value" id="r-eps"></span>
-            </div>
-            <div class="stat">
-              <span class="stat-label">Current price</span>
-              <span class="stat-value" id="r-price"></span>
-            </div>
-            <div class="stat highlight">
-              <span class="stat-label">Graham intrinsic value</span>
-              <span class="stat-value" id="r-value"></span>
-            </div>
-            <div class="stat">
-              <span class="stat-label">Margin of safety</span>
-              <span class="stat-value" id="r-margin"></span>
+          <div class="card">
+            <h3>Assumptions</h3>
+            <div class="row">
+              <label class="field">
+                <span>Growth rate <em>g</em> (%)</span>
+                <input id="growth" type="number" step="0.1" />
+                <small class="muted" id="growth-src"></small>
+              </label>
+              <label class="field">
+                <span>AAA bond yield <em>Y</em> (%)</span>
+                <input id="bondYield" type="number" step="0.1" />
+                <small class="muted" id="bond-src"></small>
+              </label>
+              <button id="recalc" type="button" class="secondary">Recalculate</button>
             </div>
           </div>
 
-          <p class="warnings" id="r-warnings" hidden></p>
-        </div>
-
-        <!-- Assumptions (editable) -->
-        <div class="card">
-          <h3>Assumptions</h3>
-          <div class="row">
-            <label class="field">
-              <span>Growth rate <em>g</em> (%)</span>
-              <input id="growth" type="number" step="0.1" />
-              <small class="muted" id="growth-src"></small>
-            </label>
-            <label class="field">
-              <span>AAA bond yield <em>Y</em> (%)</span>
-              <input id="bondYield" type="number" step="0.1" />
-              <small class="muted" id="bond-src"></small>
-            </label>
-            <button id="recalc" type="button" class="secondary">Recalculate</button>
+          <div class="card">
+            <div class="checklist-head">
+              <h3>Defensive investor checklist</h3>
+              <span class="score" id="r-score"></span>
+            </div>
+            <ul class="checklist" id="r-checklist"></ul>
           </div>
-        </div>
+        </section>
+      </section>
 
-        <!-- Defensive checklist -->
-        <div class="card">
-          <div class="checklist-head">
-            <h3>Defensive investor checklist</h3>
-            <span class="score" id="r-score"></span>
-          </div>
-          <ul class="checklist" id="r-checklist"></ul>
-        </div>
+      <!-- ───────────── Tracking tab ───────────── -->
+      <section id="tab-tracking" class="tab-panel" hidden>
+        <form id="add-form" class="card add-card">
+          <label class="field grow">
+            <span>Add a ticker to track</span>
+            <input
+              id="track-ticker"
+              name="ticker"
+              type="text"
+              placeholder="e.g. AAPL"
+              autocomplete="off"
+              spellcheck="false"
+              required
+            />
+          </label>
+          <button id="add-btn" type="submit">Track</button>
+        </form>
+
+        <section id="track-status" class="status" hidden></section>
+        <section id="stocks"></section>
+        <section id="empty-watchlist" class="card empty-state" hidden>
+          Your watchlist is empty. Add a ticker above to start tracking it.
+        </section>
       </section>
 
       <footer class="muted small">
-        Educational use only — not investment advice. Data via Yahoo Finance;
-        bond yield via FRED. The Graham value is highly sensitive to the growth
-        assumption <em>g</em>.
+        Educational use only — not investment advice. Live data via Yahoo Finance;
+        bond yield via FRED; historical EPS &amp; filings via SEC EDGAR. The Graham
+        value is highly sensitive to the growth assumption <em>g</em>.
       </footer>
     </main>
 
-    <script src="app.js"></script>
+    <!-- Chart.js (self-hosted UMD) as a classic script so it attaches window.Chart.
+         app.js / track.js load as ES modules so their top-level declarations are
+         scoped per-file (they share several names). The tab controller is the last
+         module, so it runs after them, with window.initTracking already defined. -->
+    <script src="vendor/chart.min.js"></script>
+    <script type="module" src="app.js"></script>
+    <script type="module" src="track.js"></script>
+    <script type="module">
+      // ── Tabs ──────────────────────────────────────────────────────────────
+      {
+        const tabs = document.querySelectorAll('.tab');
+        const panels = {
+          calculator: document.getElementById('tab-calculator'),
+          tracking: document.getElementById('tab-tracking'),
+        };
+        let trackingInited = false;
+
+        function activate(name) {
+          tabs.forEach((t) => t.classList.toggle('active', t.dataset.tab === name));
+          Object.entries(panels).forEach(([k, el]) => (el.hidden = k !== name));
+          if (name === 'tracking') {
+            if (!trackingInited && window.initTracking) {
+              trackingInited = true;
+              window.initTracking();
+            } else if (window.resizeTrackingCharts) {
+              // Charts laid out while hidden need a resize once visible.
+              window.resizeTrackingCharts();
+            }
+            history.replaceState(null, '', '#tracking');
+          } else {
+            history.replaceState(null, '', location.pathname);
+          }
+        }
+
+        tabs.forEach((t) => t.addEventListener('click', () => activate(t.dataset.tab)));
+        if (location.hash === '#tracking') activate('tracking');
+      }
+    </script>
   </body>
 </html>

@@ -143,3 +143,10 @@ table.history a:hover { text-decoration: underline; }
 .basis.gn { background: rgba(79, 140, 255, 0.15); color: var(--accent); }
 .basis.gf { background: rgba(46, 204, 113, 0.15); color: var(--green); }
 .history-note { margin: 10px 2px 0; line-height: 1.5; }
+
+/* Price-vs-value chart */
+.chart-wrap {
+  position: relative;
+  height: 240px;
+  margin: 4px 2px 18px;
+}
