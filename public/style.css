@@ -431,3 +431,58 @@ th .info { vertical-align: middle; }
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
   pointer-events: none;
 }
+
+/* ── Quarterly report summary ──────────────────────────────────── */
+.report-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+.report-head h3 { margin: 0; }
+.report-head button { margin-top: 0; }
+
+/* status-colored cells in the fundamentals table */
+.history.fin td.st-green { background: rgba(46, 204, 113, 0.16); color: #b8f0d0; }
+.history.fin td.st-yellow { background: rgba(245, 166, 35, 0.16); color: #ffe2ad; }
+.history.fin td.st-red { background: rgba(255, 92, 92, 0.16); color: #ffc9c9; }
+.history.fin .tr { font-size: 0.7rem; }
+.history.fin td .up, .history.fin .up { color: var(--green); }
+.history.fin td .down, .history.fin .down { color: var(--red); }
+
+/* AI narrative */
+.ai-summary {
+  margin-top: 16px;
+  padding: 16px 18px;
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  line-height: 1.55;
+  font-size: 0.92rem;
+}
+.ai-head {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  margin-bottom: 10px;
+  font-weight: 700;
+}
+.ai-summary h4 { margin: 14px 0 4px; font-size: 0.95rem; }
+.ai-summary p { margin: 8px 0; }
+.ai-summary ul { margin: 8px 0; padding-left: 20px; }
+.ai-summary li { margin: 4px 0; }
+.ai-summary strong { color: var(--text); }
+.ai-note { margin-top: 14px; }
+
+@media (min-width: 960px) {
+  .result {
+    grid-template-areas:
+      "history    summary"
+      "history    assumptions"
+      "checklist  checklist"
+      "report     report";
+  }
+  .panel-report { grid-area: report; }
+}

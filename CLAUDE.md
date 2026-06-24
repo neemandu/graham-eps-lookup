@@ -111,6 +111,23 @@ On Vercel the app needs a `GITHUB_TOKEN` env var for watchlist *writes*. Without
 it, reads still work (bundled `data/`) and the scheduled Action still records
 snapshots (it uses its own token) — only add/remove-from-the-website fails.
 
+## Quarterly report summary (fundamentals + AI)
+
+The "Quarterly report summary" card distills six metrics per quarter from SEC
+EDGAR XBRL with health colors, plus an optional AI narrative:
+
+- **`lib/financials.js`** extracts EPS, revenue (+YoY), book value/share, current
+  ratio, debt/equity, and operating cash flow per quarter. Flow metrics (EPS,
+  revenue, OCF) are de-cumulated from year-to-date filings; tag names vary by
+  company/era so candidate tags are merged per period. Status rules: current
+  ratio ≥2/1–2/<1, D/E <1/1–1.2/>1.2, OCF +/−. Served by `api/financials.js`
+  (deterministic, no key).
+- **`api/summary.js`** sends those numbers to Claude (`claude-haiku-4-5` via
+  `@anthropic-ai/sdk`) for a trend narrative across the six points. Needs an
+  `ANTHROPIC_API_KEY` env var; without it the table still works and the endpoint
+  returns a 503 with a clear message. `vercel.json` sets `maxDuration: 30` for
+  both functions.
+
 ## Commands
 
 ```bash

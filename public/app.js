@@ -74,6 +74,8 @@ const INFO = {
     "Links to each quarter's official report filed with the SEC (10-Q quarterly, 10-K annual). Source: SEC EDGAR.",
   checklist:
     "Graham's qualitative screen for the 'defensive investor'. Source: The Intelligent Investor, adapted to available data.",
+  report:
+    'Per-quarter fundamentals from SEC filings (EPS, revenue + YoY, book value, current ratio, debt/equity, operating cash flow) with health colors, plus an AI summary of the trends across quarters. Colors: current ratio ≥2 / D/E <1 / cash flow >0 are healthy.',
   // History table columns
   col_quarter: "The company's fiscal reporting quarter (e.g. 2025-Q4).",
   col_eps:
@@ -241,6 +243,139 @@ function renderAnalysis(data) {
   } else warnEl.hidden = true;
 
   renderChecklist(criteria, cur);
+
+  // Reset the report section for the new ticker.
+  $('report-body').innerHTML = '';
+  $('gen-report').textContent = 'Generate';
+  $('gen-report').disabled = false;
+}
+
+// ── Quarterly report summary (fundamentals table + AI narrative) ─────────────
+$('gen-report').addEventListener('click', generateReport);
+
+async function generateReport() {
+  if (!current) return;
+  const ticker = current.ticker;
+  const body = $('report-body');
+  const btn = $('gen-report');
+  btn.disabled = true;
+  body.innerHTML = '<p class="stock-status">Loading fundamentals…</p>';
+
+  try {
+    const res = await fetch(`/api/financials?ticker=${encodeURIComponent(ticker)}`);
+    const fin = await res.json();
+    if (!res.ok) throw new Error(fin.error || 'Failed to load financials.');
+    if (!fin.quarters || !fin.quarters.length) {
+      body.innerHTML = '<p class="muted small">No SEC financial data for this ticker (non-US listings have none).</p>';
+      return;
+    }
+
+    body.innerHTML =
+      renderFinancialsTable(fin) +
+      '<div id="ai-summary"><p class="stock-status">Generating AI summary…</p></div>';
+
+    // AI narrative (separate call; gracefully disabled if no key on the server).
+    const sumRes = await fetch(`/api/summary?ticker=${encodeURIComponent(ticker)}`);
+    const sum = await sumRes.json();
+    const ai = document.getElementById('ai-summary');
+    if (!sumRes.ok) {
+      ai.innerHTML = `<p class="ai-note muted small">${esc(sum.error || 'AI summary unavailable.')}</p>`;
+    } else {
+      ai.innerHTML =
+        `<div class="ai-summary"><div class="ai-head">AI summary · ${esc(sum.model)}</div>` +
+        `${renderMarkdown(sum.summary)}</div>`;
+    }
+  } catch (err) {
+    body.innerHTML = `<p class="stock-status error">${esc(err.message || 'Failed.')}</p>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Regenerate';
+  }
+}
+
+function fmtBig(n) {
+  if (n === null || n === undefined) return '—';
+  const a = Math.abs(n);
+  if (a >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
+  if (a >= 1e6) return `$${(n / 1e6).toFixed(1)}M`;
+  return fmtNum(n, 2);
+}
+const arrow = (t) =>
+  t === 'up' ? ' <span class="up">▲</span>' : t === 'down' ? ' <span class="down">▼</span>' : '';
+const stClass = (s) => (s ? `st-${s}` : '');
+
+function renderFinancialsTable(fin) {
+  const rows = fin.quarters
+    .slice(-12)
+    .reverse()
+    .map((q) => {
+      const yoy =
+        q.revenueYoY != null
+          ? ` <span class="muted">(${q.revenueYoY > 0 ? '+' : ''}${(q.revenueYoY * 100).toFixed(0)}%)</span>`
+          : '';
+      const filing = q.filing
+        ? `<a href="${esc(q.filing.url)}" target="_blank" rel="noopener">${esc(q.filing.form)}</a>`
+        : '—';
+      return `
+        <tr>
+          <td>${esc(q.quarter)}</td>
+          <td>${q.eps == null ? '—' : fmtNum(q.eps, 2)}${arrow(q.epsTrend)}</td>
+          <td>${fmtBig(q.revenue)}${yoy}</td>
+          <td>${q.bvps == null ? '—' : fmtNum(q.bvps, 2)}${arrow(q.bvpsTrend)}</td>
+          <td class="${stClass(q.currentStatus)}">${q.currentRatio ?? '—'}</td>
+          <td class="${stClass(q.deStatus)}">${q.debtToEquity ?? '—'}</td>
+          <td class="${stClass(q.ocfStatus)}">${fmtBig(q.operatingCashFlow)}</td>
+          <td>${filing}</td>
+        </tr>`;
+    })
+    .join('');
+  return `
+    <div class="history-wrap">
+      <table class="history fin">
+        <thead>
+          <tr>
+            <th>Quarter</th><th>EPS</th><th>Revenue (YoY)</th><th>BVPS</th>
+            <th>Curr. ratio</th><th>D/E</th><th>Op. cash flow</th><th>Filing</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <p class="history-note muted small">
+      Last 12 quarters from SEC EDGAR. Green/yellow/red flag health: current ratio
+      (≥2 / 1–2 / &lt;1), debt-equity (&lt;1 / 1–1.2 / &gt;1.2), operating cash flow
+      (positive / negative). ▲▼ show EPS and book-value trend.
+    </p>`;
+}
+
+// Minimal, safe Markdown → HTML for the AI summary (escape first, then format).
+function renderMarkdown(md) {
+  const lines = esc(md).split('\n');
+  let html = '';
+  let inList = false;
+  const inline = (s) =>
+    s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>').replace(/\*([^*]+)\*/g, '<em>$1</em>');
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) {
+      if (inList) { html += '</ul>'; inList = false; }
+      continue;
+    }
+    const h = line.match(/^#{1,6}\s+(.*)$/);
+    const li = line.match(/^[-*]\s+(.*)$/);
+    if (h) {
+      if (inList) { html += '</ul>'; inList = false; }
+      html += `<h4>${inline(h[1])}</h4>`;
+    } else if (li) {
+      if (!inList) { html += '<ul>'; inList = true; }
+      html += `<li>${inline(li[1])}</li>`;
+    } else {
+      if (inList) { html += '</ul>'; inList = false; }
+      html += `<p>${inline(line)}</p>`;
+    }
+  }
+  if (inList) html += '</ul>';
+  return html;
 }
 
 function paintValue(value, margin, currency) {

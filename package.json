@@ -11,6 +11,7 @@
     "backfill": "node scripts/backfill.js"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.105.0",
     "express": "^4.19.2"
   }
 }
