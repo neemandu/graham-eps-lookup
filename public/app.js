@@ -192,11 +192,35 @@ function renderHistory(series, currency) {
     $('hist-empty').textContent =
       'No SEC filing history available for this ticker (non-US listings have none).';
     $('hist-table').innerHTML = '';
+    $('hist-reports').innerHTML = '';
     return;
   }
 
   buildChart(series, currency);
   $('hist-table').innerHTML = renderTable(series, currency);
+  $('hist-reports').innerHTML = renderReports(series);
+}
+
+// Always-visible quick links to recent quarters' SEC filings (newest first).
+// Capped to keep it compact; the full set is in the table view.
+function renderReports(series) {
+  const MAX = 12;
+  const all = series.filter((s) => s.filing && s.filing.url).reverse();
+  if (!all.length) return '';
+  const shown = all.slice(0, MAX);
+  const links = shown
+    .map(
+      (s) =>
+        `<a class="report-link" href="${esc(s.filing.url)}" target="_blank" rel="noopener" ` +
+        `title="${esc(s.quarter)} ${esc(s.filing.form)} — opens SEC EDGAR">` +
+        `${esc(s.quarter)} <span class="report-form">${esc(s.filing.form)}</span></a>`
+    )
+    .join('');
+  const more =
+    all.length > MAX
+      ? `<span class="reports-more muted small">+${all.length - MAX} more in the table view</span>`
+      : '';
+  return `<span class="reports-label">Quarterly reports:</span>${links}${more}`;
 }
 
 function buildChart(series, currency) {

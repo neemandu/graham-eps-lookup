@@ -45,7 +45,7 @@
 
       <section id="result" class="result" hidden>
         <!-- Quarterly history (chart / table) — right under the search -->
-        <div class="card">
+        <div class="card panel-history">
           <div class="history-head-row">
             <h3 id="hist-title">Quarterly history</h3>
             <div class="head-actions">
@@ -64,6 +64,9 @@
           <div id="hist-chart" class="chart-wrap"><canvas id="series-canvas"></canvas></div>
           <div id="hist-table" hidden></div>
           <p id="hist-empty" class="muted small" hidden></p>
+
+          <!-- Always-visible links to each quarter's SEC filing -->
+          <div id="hist-reports" class="reports"></div>
           <p class="history-note muted small">
             History uses the <strong>Graham Number</strong> √(22.5×EPS×BVPS) per
             quarter (no growth needed; N/A when EPS or book value isn't positive).
@@ -73,7 +76,7 @@
         </div>
 
         <!-- Current Graham analysis -->
-        <div class="card">
+        <div class="card panel-summary">
           <div class="result-head">
             <div>
               <h2 id="r-name"></h2>
@@ -105,7 +108,7 @@
         </div>
 
         <!-- Assumptions -->
-        <div class="card">
+        <div class="card panel-assumptions">
           <h3>Assumptions</h3>
           <div class="row">
             <label class="field">
@@ -123,7 +126,7 @@
         </div>
 
         <!-- Defensive checklist -->
-        <div class="card">
+        <div class="card panel-checklist">
           <div class="checklist-head">
             <h3>Defensive investor checklist</h3>
             <span class="score" id="r-score"></span>
